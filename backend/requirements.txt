@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+requests
+sarvamai
+python-dotenv
+slowapi
+sqlalchemy
+python-multipart
