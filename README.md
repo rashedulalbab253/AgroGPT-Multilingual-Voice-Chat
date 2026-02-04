@@ -1,160 +1,125 @@
-# 🌾 Multilingual Assistance Chatbot
+# 🌾 AgroGPT: Intelligent Multilingual Agri-Advisory System
+### *Bridging the Digital Divide with Voice-Enabled Generative AI for Agriculture*
 
-A secure multilingual chatbot system designed to assist people in their native language. The project consists of a **FastAPI backend** for chat generation and translation, and a **React frontend** chat widget for user interaction. The backend leverages the **Sarvam AI platform** and is secured using a custom **API key**.
-
----
-
-## 💻 Prerequisites
-
-To run this project locally, ensure the following tools are installed:
-
-- **Python 3.9+** (for FastAPI backend)
-- **Node.js & npm** (for React frontend)
-- **Postman** (for API testing)
-- **Sarvam AI API Key** (`SARVAM_API_KEY`)
+![Build Status](https://img.shields.io/badge/Version-1.0.0-green.svg)
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![React](https://img.shields.io/badge/React-18-blue.svg)
+![Security](https://img.shields.io/badge/Security-API--Key--Auth-gold.svg)
+![License](https://img.shields.io/badge/License-MIT-gray.svg)
 
 ---
 
-## 🚀 1. Backend Setup (FastAPI)
+## 🌟 Project Vision
+**AgroGPT** is an enterprise-grade, multilingual AI advisor designed to empower farmers and agriculturists. In regions where literacy or technical barriers exist, AgroGPT provides a **voice-first, native-language interface** to access expert advice on crop management, pest control, and sustainable farming practices.
 
-The backend handles chat logic, conversation history, translations, and enforces API key authentication.
+This system leverages state-of-the-art **Generative AI** and **ASR (Automatic Speech Recognition)** via the Sarvam AI platform to deliver high-accuracy, domain-specific intelligence.
 
-### 1.1 Directory Setup
+---
 
-Navigate to your project root:
+## 🚀 Key Features
 
-```bash
- cd backend
+### 1. 🎤 Voice-First Interaction
+Seamlessly transcribe regional dialects into actionable queries using advanced ASR models. Designed for accessibility in rural environments.
+
+### 2. 🌍 Universal Multilingual Support
+Conversational support for 6+ major languages:
+- **English, Hindi, Bengali, Gujarati, Kannada, Punjabi.**
+
+### 3. 🛡️ Enterprise Security & Scalability
+- **API Key Guard:** Custom-built middleware for secure, authenticated access.
+- **Rate Limiting:** Integrated `slowapi` to prevent abuse and ensure high availability.
+- **Async Architecture:** Built on **FastAPI** for high-performance, asynchronous processing.
+
+### 4. 📦 Cloud-Ready Deployment
+- Full **Dockerization** for consistent environments.
+- **GitHub Actions (CI/CD)** automated pipeline for Docker Hub deployment.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | FastAPI (Python), SQLAlchemy, Pydantic |
+| **Frontend** | React.js, Vite, Tailwind CSS, Axios |
+| **AI/ML** | Sarvam AI (Text-to-Text & ASR), `saarika:v2.5` |
+| **Database** | SQLite (Production-ready abstraction available) |
+| **DevOps** | Docker, Docker Compose, GitHub Actions |
+
+---
+
+## 🏗️ System Architecture
+
+```text
+User Interface (React) <---> Secure Gateway (FastAPI) <---> Sarvam AI Engine
+                                     |
+                          +----------+----------+
+                          |          |          |
+                    Local Cache   Auth Mgr   Session DB
 ```
 
-### 1.2 Environment Configuration
+---
 
-Create a `.env` file inside the directory:
+## ⚙️ Setup & Installation
 
+### 1. Environment Configuration
+Create a `.env` file in the root directory:
 ```env
-SARVAM_API_KEY="your-sarvam-ai-key-here"
-MASTER_API_KEY="my-secret-master-key-12345"
+SARVAM_API_KEY="your_sarvam_key"
+MASTER_API_KEY="your_custom_secure_key"
 ```
 
-⚠️ **Important:** Replace the placeholder values with your actual API keys.
-
-### 1.3 Install Dependencies
-
+### 2. Local Development (Classic)
+**Backend:**
 ```bash
-pip install fastapi uvicorn python-dotenv sarvamai requests pydantic
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --port 8000 --reload
 ```
 
-### 1.4 Run the Server
-
+**Frontend:**
 ```bash
-uvicorn test:app --reload --port 8000
+cd frontend
+npm install
+npm run dev
 ```
 
-
-
----
-
-## 🎨 2. Frontend Setup (React)
-
-The frontend is a single Streamlit web page that communicates with the FastAPI backend.
-
-### 2.1 API Key Injection
-
-Ensure the **hardcoded `MASTER_API_KEY`** in your React file matches the backend’s `.env` file.
-
-In `Chatbot.jsx`:
-
-```javascript
-// --- API & LANGUAGE CONFIGURATION ---
-const FASTAPI_API_URL = "http://127.0.0.1:8000/chat";
-const MASTER_API_KEY = "my-secret-master-key-12345"; // must match backend
-```
-
-### 2.2 Run the Frontend
-
-If integrated into a React app, start the development server:
-
+### 3. Modern Launch (Recommended)
+Launch the entire stack with one command:
 ```bash
-npm start
-# or
-yarn start
+python run.py
 ```
 
 ---
 
-## 🧪 3. API Testing with Postman
+## 🐳 Dockerization & Deployment
 
-All requests require the `X-API-Key` header.
-
-### 3.1 Unauthorized Test (Expected Failure)
-
-**Request:**
-
-- **Method:** POST
-- **URL:** `http://127.0.0.1:8000/chat`
-- **Headers:** `Content-Type: application/json`
-- **Body:**
-
-```json
-{
-  "messages": [{ "role": "user", "content": "Hello" }],
-  "target_language": "English"
-}
+To run in a containerized environment (Port 8000 & 5173):
+```bash
+docker-compose up --build -d
 ```
 
-**Expected Result:**
-
-```json
-{ "detail": "Not authenticated" }
-```
-
-or
-
-```json
-{ "detail": "API Key header is missing" }
-```
-
-### 3.2 Authorized Chat Test (Expected Success)
-
-**Request:**
-
-- **Method:** POST
-- **URL:** `http://127.0.0.1:8000/chat`
-- **Headers:**
-
-  - `Content-Type: application/json`
-  - `X-API-Key: my-secret-master-key-12345`
-
-- **Body:**
-
-```json
-{
-  "messages": [
-    { "role": "user", "content": "What fertilizer should I use for rice?" }
-  ],
-  "target_language": "Kannada"
-}
-```
-
-**Expected Result:**
-
-```json
-{
-  "reply": "<Translated response in Kannada>"
-}
-```
+**CI/CD Pipeline:**
+The project is configured to automatically push images to Docker Hub:
+- Repository: `rashedulalbab1234/agrogpt`
+- GitHub User: `rashedulalbab253`
 
 ---
 
-## 📌 Project Highlights
+## 🎓 Academic Significance
+This project serves as a research foundation for:
+1. **NLP in Low-Resource Languages:** Real-world application of cross-lingual knowledge transfer.
+2. **HCI (Human-Computer Interaction):** Studying the impact of voice-based AI on rural technology adoption.
+3. **Domain-Specific AI Alignment:** Implementing strict system prompts and safety guards for critical agricultural advice.
 
-- 🔒 Secure backend with API key authentication
-- 🌍 Multilingual translation powered by **Sarvam AI**
-- 🧑‍🌾 Farmer-friendly chatbot interface
-- ⚡ Built with **FastAPI** + **React**
+---
+
+## 👨‍💻 Author
+**Rashedul Albab**
+- [GitHub](https://github.com/rashedulalbab253)
+- [Docker Hub](https://hub.docker.com/u/rashedulalbab1234)
 
 ---
 
 ## 📜 License
-
-This project is licensed under the MIT License.
+Licensed under the MIT License.
