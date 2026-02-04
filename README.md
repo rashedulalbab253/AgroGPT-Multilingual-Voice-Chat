@@ -101,8 +101,9 @@ docker-compose up --build -d
 
 **CI/CD Pipeline:**
 The project is configured to automatically push images to Docker Hub:
-- Repository: `rashedulalbab1234/agrogpt`
-- GitHub User: `rashedulalbab253`
+- **Backend:** `rashedulalbab1234/agrogpt-backend`
+- **Frontend:** `rashedulalbab1234/agrogpt-frontend`
+- **GitHub User:** `rashedulalbab253`
 
 ---
 
@@ -114,7 +115,17 @@ This project serves as a research foundation for:
 
 ---
 
-## 👨‍💻 Author
+## �️ Contribution & Role
+As the Lead Developer of **AgroGPT**, I spearheaded the following architectural and technical implementations:
+- **System Orchestration:** Designed and implemented the full-stack architecture using FastAPI and React.
+- **Multilingual Integration:** Integrated Sarvam AI's Generative models and ASR (`saarika:v2.5`) to support diverse regional languages.
+- **Security Engineering:** Built custom API-Key middleware and enforced rate-limiting to ensure system integrity.
+- **DevOps & Cloud:** Engineered the Dockerization strategy and CI/CD pipelines for automated multi-service deployment.
+- **Agricultural Alignment:** Configured domain-specific system prompts to ensure the AI remains focused on providing accurate agricultural advice.
+
+---
+
+## �👨‍💻 Author
 **Rashedul Albab**
 - [GitHub](https://github.com/rashedulalbab253)
 - [Docker Hub](https://hub.docker.com/u/rashedulalbab1234)
