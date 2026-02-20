@@ -7,6 +7,7 @@ export default defineConfig({
     server: {
         host: true, // Needed for Docker
         port: 5173,
+        allowedHosts: true, // Allow all hosts, including Render domains
         watch: {
             usePolling: true
         }
