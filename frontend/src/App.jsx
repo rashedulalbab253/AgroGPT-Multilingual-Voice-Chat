@@ -20,7 +20,11 @@ const App = () => {
     };
 
     return (
-        <div className="flex h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-agro-900 text-white font-sans overflow-hidden">
+        <div className="flex h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-agro-900 text-white font-sans overflow-hidden relative">
+            {/* Developer Credit */}
+            <div className="fixed top-3 right-5 z-50 text-[10px] text-gray-400 uppercase tracking-widest opacity-80 backdrop-blur-sm px-2 py-1 rounded-full border border-white/5 bg-black/10 hidden sm:block">
+                Developed by <span className="text-agro-400 font-bold">Rashedul Albab</span>
+            </div>
             {/* Sidebar Navigation */}
             <Sidebar
                 activeTab={activeTab}
