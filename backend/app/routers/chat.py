@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Security, Request, Depends, File, UploadFile
+from fastapi import APIRouter, Security, Request, Depends, File, UploadFile, Form
 from ..models.schemas import ChatRequest, ChatResponse, TranslateRequest, TranslateResponse
 from ..services import sarvam_service
 from ..core.security import get_api_key
@@ -33,7 +33,7 @@ async def translate_endpoint(request: Request, body: TranslateRequest, api_key: 
 async def transcribe_endpoint(
     request: Request, 
     file: UploadFile = File(...), 
-    language_name: str = "English", 
+    language_name: str = Form("English"), 
     api_key: str = Security(get_api_key)
 ):
     logger.info(f"Transcription request for: {language_name}")
