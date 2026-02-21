@@ -66,7 +66,7 @@ User Interface (React) <---> Secure Gateway (FastAPI) <---> Sarvam AI Engine
 Create a `.env` file in the root directory:
 ```env
 SARVAM_API_KEY="your_sarvam_key"
-MASTER_API_KEY="your_custom_secure_key"
+MASTER_API_KEY="my-secret-master-key-12345"
 ```
 
 ### 2. Local Development (Classic)
