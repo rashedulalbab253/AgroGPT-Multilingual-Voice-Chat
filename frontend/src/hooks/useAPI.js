@@ -49,7 +49,7 @@ export const transcribeAudio = async (audioBlob, languageName, apiKey) => {
         const response = await api.post('/transcribe', formData, {
             headers: {
                 'X-API-Key': apiKey,
-                'Content-Type': 'multipart/form-data'
+                'Content-Type': undefined
             }
         });
         return response.data;
