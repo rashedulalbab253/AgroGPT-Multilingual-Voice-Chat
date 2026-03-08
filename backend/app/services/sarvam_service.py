@@ -127,10 +127,31 @@ async def transcribe_audio(file_content: bytes, language_code: str) -> str:
 
     try:
         import io
-        audio_file = io.BytesIO(file_content)
-        audio_file.name = "audio.wav"
         
-        # sarvamai sdk call
+        # --- Audio Format Conversion ---
+        # Browsers record audio as WebM (Opus codec), but Sarvam ASR expects WAV.
+        # We use pydub to convert the raw WebM bytes into a proper WAV format.
+        try:
+            from pydub import AudioSegment
+            webm_io = io.BytesIO(file_content)
+            audio_segment = AudioSegment.from_file(webm_io, format="webm")
+            # Convert to 16kHz mono WAV — standard ASR input format
+            audio_segment = audio_segment.set_frame_rate(16000).set_channels(1)
+            wav_io = io.BytesIO()
+            audio_segment.export(wav_io, format="wav")
+            wav_io.seek(0)
+            audio_file = wav_io
+            audio_file_name = "audio.wav"
+            logger.info("Audio successfully converted from WebM to WAV for Sarvam ASR.")
+        except Exception as conv_err:
+            logger.warning(f"Audio conversion failed, sending raw bytes as fallback: {conv_err}")
+            audio_file = io.BytesIO(file_content)
+            audio_file_name = "audio.webm"
+
+        # Attach a name attribute so the Sarvam SDK can detect the format
+        audio_file.name = audio_file_name
+
+        # Sarvam ASR SDK call
         response = sarvam_client.speech_to_text.transcribe(
             file=audio_file,
             model="saarika:v2.5",
@@ -140,3 +161,4 @@ async def transcribe_audio(file_content: bytes, language_code: str) -> str:
     except Exception as e:
         logger.error(f"Transcription failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Voice recognition failed")
+
