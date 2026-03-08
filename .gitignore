@@ -2,7 +2,6 @@
 node_modules/
 dist/
 build/
-.env
 
 # Python
 __pycache__/
@@ -10,9 +9,25 @@ __pycache__/
 *$py.class
 venv/
 env/
-.env
 .pytest_cache/
 
-# OS Files
+# Environment Variables (never commit secrets)
+.env
+*.env
+
+# Database files (runtime data, not source code)
+*.db
+*.sqlite
+*.sqlite3
+
+# Log & debug scratch files
+*.log
+*.txt
+backend_log.txt
+ports.txt
+
+# IDE & OS Files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/

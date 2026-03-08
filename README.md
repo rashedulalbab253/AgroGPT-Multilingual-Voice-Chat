@@ -60,6 +60,80 @@ User Interface (React) <---> Secure Gateway (FastAPI) <---> Sarvam AI Engine
 
 ---
 
+## 📁 Project Structure
+
+```
+AgroGPT-Multilingual-Voice-Chat/
+│
+├── 📂 .github/
+│   └── 📂 workflows/
+│       └── docker-publish.yml       # CI/CD pipeline → auto-push to Docker Hub
+│
+├── 📂 backend/                      # FastAPI Python backend
+│   ├── 📂 app/
+│   │   ├── 📂 core/                 # Core utilities & configuration
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py            # App settings & environment variables
+│   │   │   ├── database.py          # SQLAlchemy DB session setup
+│   │   │   ├── logger.py            # Centralized logging setup
+│   │   │   └── security.py          # API-Key authentication middleware
+│   │   │
+│   │   ├── 📂 models/               # Data layer
+│   │   │   ├── __init__.py
+│   │   │   ├── db_models.py         # SQLAlchemy ORM models (DB tables)
+│   │   │   └── schemas.py           # Pydantic request/response schemas
+│   │   │
+│   │   ├── 📂 routers/              # API route handlers
+│   │   │   ├── __init__.py
+│   │   │   └── chat.py              # /chat endpoints (text & voice)
+│   │   │
+│   │   ├── 📂 services/             # Business logic & external API clients
+│   │   │   ├── __init__.py
+│   │   │   └── sarvam_service.py    # Sarvam AI integration (LLM + ASR)
+│   │   │
+│   │   ├── __init__.py
+│   │   └── main.py                  # FastAPI app entry point
+│   │
+│   ├── 📂 data/                     # SQLite database storage (runtime, not committed)
+│   ├── .dockerignore
+│   ├── Dockerfile                   # Backend container definition
+│   └── requirements.txt             # Python dependencies
+│
+├── 📂 frontend/                     # React.js frontend (Vite)
+│   ├── 📂 src/
+│   │   ├── 📂 components/           # Reusable UI components
+│   │   │   ├── ChatInterface.jsx    # Main chat UI (text + voice input)
+│   │   │   └── Sidebar.jsx          # Language selector & session controls
+│   │   │
+│   │   ├── 📂 hooks/                # Custom React hooks
+│   │   │   └── useAPI.js            # Axios API call abstraction
+│   │   │
+│   │   ├── App.jsx                  # Root application component
+│   │   ├── main.jsx                 # React DOM entry point
+│   │   └── index.css                # Global styles
+│   │
+│   ├── index.html                   # HTML shell
+│   ├── vite.config.js               # Vite bundler configuration
+│   ├── tailwind.config.js           # Tailwind CSS configuration
+│   ├── postcss.config.js            # PostCSS configuration
+│   ├── package.json                 # Node.js dependencies
+│   ├── .dockerignore
+│   └── Dockerfile                   # Frontend container definition
+│
+├── 📂 docs/                         # Project documentation & reports
+│   ├── INTERVIEW_SCRIPT.md
+│   ├── PROJECT_ARCHITECTURE_AND_INTERVIEW_GUIDE.md
+│   └── Project_Report.md
+│
+├── docker-compose.yml               # Multi-service orchestration (backend + frontend)
+├── run.py                           # One-command local dev launcher
+├── .env                             # Environment variables (not committed)
+├── .gitignore
+└── README.md
+```
+
+---
+
 ## ⚙️ Setup & Installation
 
 ### 1. Environment Configuration
