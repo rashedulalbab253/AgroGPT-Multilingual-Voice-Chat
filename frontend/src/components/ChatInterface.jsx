@@ -1,9 +1,47 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, Sprout, Loader2, Bot, User, Mic, Square } from 'lucide-react';
+import { Send, Sprout, Loader2, Bot, User, Mic, Square, ChevronDown, ChevronUp, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sendMessage, getHistory, transcribeAudio } from '../hooks/useAPI';
 
 const SYSTEM_INIT = { role: "system", content: "Init" }; // Placeholder, verified by backend
+
+// Renders message content, parsing <think>...</think> blocks into a styled collapsible section
+const MessageContent = ({ content }) => {
+    const [thinkOpen, setThinkOpen] = useState(false);
+    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+
+    if (!thinkMatch) {
+        return <div className="whitespace-pre-wrap leading-relaxed">{content}</div>;
+    }
+
+    const thinkText = thinkMatch[1].trim();
+    const replyText = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+
+    return (
+        <div className="space-y-2">
+            {/* Styled think block */}
+            <div className="rounded-lg border border-slate-500 border-opacity-50 bg-slate-800 bg-opacity-60 overflow-hidden">
+                <button
+                    onClick={() => setThinkOpen(o => !o)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-300 transition-colors"
+                >
+                    <BrainCircuit size={13} className="text-agro-400 flex-shrink-0" />
+                    <span className="font-mono tracking-wide">思考 / Thinking...</span>
+                    <span className="ml-auto">{thinkOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</span>
+                </button>
+                {thinkOpen && (
+                    <div className="px-3 pb-2 text-xs text-slate-500 whitespace-pre-wrap border-t border-slate-600 border-opacity-40 pt-2">
+                        {thinkText}
+                    </div>
+                )}
+            </div>
+            {/* Actual reply */}
+            {replyText && (
+                <div className="whitespace-pre-wrap leading-relaxed">{replyText}</div>
+            )}
+        </div>
+    );
+};
 
 const ChatInterface = ({ language, apiKey, sessionId }) => {
     const [messages, setMessages] = useState([]);
@@ -197,8 +235,8 @@ const ChatInterface = ({ language, apiKey, sessionId }) => {
                                 <div className="mt-1 flex-shrink-0">
                                     {msg.role === 'user' ? <User size={18} /> : <Bot size={18} className="text-agro-400" />}
                                 </div>
-                                <div className="whitespace-pre-wrap leading-relaxed border-l-2 border-transparent pl-1">
-                                    {msg.content}
+                                <div className="border-l-2 border-transparent pl-1">
+                                    <MessageContent content={msg.content} />
                                 </div>
                             </div>
                         </motion.div>

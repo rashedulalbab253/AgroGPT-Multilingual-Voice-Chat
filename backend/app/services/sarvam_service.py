@@ -84,10 +84,25 @@ async def process_chat(request: ChatRequest, db: Session) -> ChatResponse:
         logger.error(f"Sarvam API Unexpected Response: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Invalid response from AI provider")
 
-    # Translation
-    final_reply = assistant_reply
-    if target_lang_code != "en-IN":
-        final_reply = _translate_text(assistant_reply, "en-IN", target_lang_code)
+    # --- Extract <think> block BEFORE translation ---
+    # The model produces <think>...</think> reasoning blocks.
+    # We must NOT translate these — they should remain as <think> tags in all languages.
+    import re
+    think_block = ""
+    reply_text = assistant_reply
+
+    think_match = re.search(r"(<think>.*?</think>)\s*", assistant_reply, re.DOTALL)
+    if think_match:
+        think_block = think_match.group(1)  # e.g. "<think>...</think>"
+        reply_text = assistant_reply[think_match.end():].strip()  # actual response text only
+
+    # Translation — only translate the reply text, never the <think> block
+    translated_reply = reply_text
+    if target_lang_code != "en-IN" and reply_text:
+        translated_reply = _translate_text(reply_text, "en-IN", target_lang_code)
+
+    # Reassemble: keep <think> block in its original English form, append translated reply
+    final_reply = f"{think_block}\n{translated_reply}".strip() if think_block else translated_reply
 
     # Save Assistant message
     db_assistant_msg = ChatMessage(session_id=request.session_id, role="assistant", content=final_reply)
