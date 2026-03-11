@@ -36,8 +36,9 @@ async def transcribe_endpoint(
     language_name: str = Form("English"), 
     api_key: str = Security(get_api_key)
 ):
-    logger.info(f"Transcription request for: {language_name}")
+    logger.info(f"Transcription request for: {language_name}, file: {file.filename}, content_type: {file.content_type}")
     lang_code = sarvam_service.get_language_code(language_name)
     content = await file.read()
+    logger.info(f"Read {len(content)} bytes from uploaded audio file")
     transcript = await sarvam_service.transcribe_audio(content, lang_code)
     return {"transcript": transcript}

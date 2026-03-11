@@ -34,33 +34,88 @@ const ChatInterface = ({ language, apiKey, sessionId }) => {
         }
     }, [messages, loading]);
 
+    const recordingStartTimeRef = useRef(null);
+    const selectedMimeTypeRef = useRef('audio/webm');
+
+    // Detect the best supported audio MIME type for this browser
+    const getSupportedMimeType = () => {
+        const types = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/ogg;codecs=opus',
+            'audio/ogg',
+        ];
+        for (const type of types) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+        return ''; // Let the browser decide
+    };
+
     const startRecording = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorderRef.current = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 16000,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                }
+            });
+
+            const mimeType = getSupportedMimeType();
+            selectedMimeTypeRef.current = mimeType || 'audio/webm';
+            
+            const recorderOptions = mimeType ? { mimeType } : {};
+            mediaRecorderRef.current = new MediaRecorder(stream, recorderOptions);
             audioChunksRef.current = [];
 
             mediaRecorderRef.current.ondataavailable = (event) => {
-                audioChunksRef.current.push(event.data);
+                if (event.data && event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
             };
 
             mediaRecorderRef.current.onstop = async () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                // Check minimum recording duration (500ms) to avoid empty clips
+                const recordingDuration = Date.now() - (recordingStartTimeRef.current || 0);
+                if (recordingDuration < 500 || audioChunksRef.current.length === 0) {
+                    console.warn("Recording too short, ignoring.");
+                    return;
+                }
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: selectedMimeTypeRef.current });
+                
+                // Verify blob has data
+                if (audioBlob.size < 100) {
+                    console.warn("Audio blob too small, ignoring.");
+                    alert("Recording was too short. Please hold the mic button longer.");
+                    return;
+                }
+
                 setLoading(true);
                 try {
                     const data = await transcribeAudio(audioBlob, language, apiKey);
-                    if (data.transcript) {
+                    if (data && data.transcript && data.transcript.trim()) {
+                        // Auto-fill and auto-send the transcribed text
                         setInput(data.transcript);
+                    } else {
+                        alert("Could not recognize speech. Please speak clearly and try again.");
                     }
                 } catch (err) {
                     console.error("Transcription error", err);
-                    alert("Could not recognize voice. Please try again.");
+                    const errorMsg = err?.response?.data?.detail || "Could not recognize voice. Please try again.";
+                    alert(errorMsg);
                 } finally {
                     setLoading(false);
                 }
             };
 
-            mediaRecorderRef.current.start();
+            // Use timeslice to collect data every 250ms for more reliable chunks
+            mediaRecorderRef.current.start(250);
+            recordingStartTimeRef.current = Date.now();
             setIsRecording(true);
         } catch (err) {
             console.error("Mic access denied", err);

@@ -125,40 +125,80 @@ async def transcribe_audio(file_content: bytes, language_code: str) -> str:
         logger.error("Sarvam Client is not initialized for transcription")
         raise HTTPException(status_code=500, detail="Transcription service unavailable")
 
+    if not file_content or len(file_content) < 100:
+        logger.error(f"Audio content too small: {len(file_content) if file_content else 0} bytes")
+        raise HTTPException(status_code=400, detail="Audio recording is too short or empty")
+
+    logger.info(f"Received audio: {len(file_content)} bytes, target lang: {language_code}")
+
     try:
         import io
         
+        # --- Detect audio format from magic bytes ---
+        def detect_format(data: bytes) -> str:
+            if data[:4] == b'\x1aE\xdf\xa3':
+                return "webm"
+            elif data[:4] == b'RIFF':
+                return "wav"
+            elif data[:4] == b'OggS':
+                return "ogg"
+            elif data[4:8] == b'ftyp':
+                return "mp4"
+            else:
+                return "webm"  # Default assumption for browser recordings
+
+        detected_format = detect_format(file_content)
+        logger.info(f"Detected audio format: {detected_format}")
+
+        audio_file = None
+        audio_file_name = "audio.wav"
+
         # --- Audio Format Conversion ---
         # Browsers record audio as WebM (Opus codec), but Sarvam ASR expects WAV.
-        # We use pydub to convert the raw WebM bytes into a proper WAV format.
+        # We use pydub to convert the raw audio bytes into a proper WAV format.
         try:
             from pydub import AudioSegment
-            webm_io = io.BytesIO(file_content)
-            audio_segment = AudioSegment.from_file(webm_io, format="webm")
+            audio_io = io.BytesIO(file_content)
+            audio_segment = AudioSegment.from_file(audio_io, format=detected_format)
             # Convert to 16kHz mono WAV — standard ASR input format
-            audio_segment = audio_segment.set_frame_rate(16000).set_channels(1)
+            audio_segment = audio_segment.set_frame_rate(16000).set_channels(1).set_sample_width(2)
             wav_io = io.BytesIO()
             audio_segment.export(wav_io, format="wav")
             wav_io.seek(0)
             audio_file = wav_io
             audio_file_name = "audio.wav"
-            logger.info("Audio successfully converted from WebM to WAV for Sarvam ASR.")
-        except Exception as conv_err:
-            logger.warning(f"Audio conversion failed, sending raw bytes as fallback: {conv_err}")
+            logger.info(f"Audio successfully converted from {detected_format} to WAV ({wav_io.getbuffer().nbytes} bytes)")
+        except ImportError:
+            logger.warning("pydub not installed, sending raw audio as fallback")
             audio_file = io.BytesIO(file_content)
-            audio_file_name = "audio.webm"
+            audio_file_name = f"audio.{detected_format}"
+        except Exception as conv_err:
+            logger.warning(f"Audio conversion from {detected_format} failed: {conv_err}, trying raw upload")
+            audio_file = io.BytesIO(file_content)
+            audio_file_name = f"audio.{detected_format}"
 
         # Attach a name attribute so the Sarvam SDK can detect the format
         audio_file.name = audio_file_name
 
         # Sarvam ASR SDK call
+        logger.info(f"Calling Sarvam ASR with file: {audio_file_name}, lang: {language_code}")
         response = sarvam_client.speech_to_text.transcribe(
             file=audio_file,
             model="saarika:v2.5",
             language_code=language_code
         )
-        return response.transcript
+        
+        transcript = response.transcript if response and hasattr(response, 'transcript') else ""
+        
+        if not transcript or not transcript.strip():
+            logger.warning("Sarvam ASR returned empty transcript")
+            raise HTTPException(status_code=422, detail="Could not recognize speech. Please speak clearly and try again.")
+        
+        logger.info(f"Transcription successful: '{transcript[:50]}...'")
+        return transcript
+        
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         logger.error(f"Transcription failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Voice recognition failed")
-
+        raise HTTPException(status_code=500, detail="Voice recognition failed. Please try again.")

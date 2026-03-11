@@ -42,14 +42,25 @@ export const getHistory = async (sessionId, apiKey) => {
 
 export const transcribeAudio = async (audioBlob, languageName, apiKey) => {
     try {
+        // Determine proper file extension from blob MIME type
+        const mimeType = audioBlob.type || 'audio/webm';
+        let extension = 'webm';
+        if (mimeType.includes('wav')) extension = 'wav';
+        else if (mimeType.includes('mp4') || mimeType.includes('m4a')) extension = 'mp4';
+        else if (mimeType.includes('ogg')) extension = 'ogg';
+
         const formData = new FormData();
-        formData.append('file', audioBlob, 'record.webm');
+        formData.append('file', audioBlob, `recording.${extension}`);
         formData.append('language_name', languageName);
 
+        // IMPORTANT: We must NOT set Content-Type here.
+        // Axios needs to auto-generate the multipart/form-data boundary.
+        // Setting it to undefined with the instance's default 'application/json' 
+        // can interfere. We use a fresh headers object with only the API key.
         const response = await api.post('/transcribe', formData, {
             headers: {
                 'X-API-Key': apiKey,
-                'Content-Type': undefined
+                'Content-Type': 'multipart/form-data'
             }
         });
         return response.data;
